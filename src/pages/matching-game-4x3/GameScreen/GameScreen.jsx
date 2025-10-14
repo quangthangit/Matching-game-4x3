@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import style from "./style.module.css";
-import Card from "../card/card";
+import Card from "../card/Card";
 
 export default function GameScreen({ data, onBack }) {
   const [opened, setOpened] = useState([]);
