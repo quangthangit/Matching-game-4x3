@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import style from "./style.module.css";
 import Card from "../Card/Card";
 
@@ -8,45 +8,67 @@ export default function GameScreen({ data, onBack }) {
   const [moves, setMoves] = useState(0);
   const [elapsedTime, setElapsedTime] = useState(0);
   const [gameCompleted, setGameCompleted] = useState(false);
-  const [cards, setCards] = useState(() => {
-    const mixed = data
+  const [cards, setCards] = useState(() =>
+    data
       .flatMap((item) => [
         { content: item.text, type: "text" },
         { content: item.image, type: "image" },
       ])
-      .sort(() => Math.random() - 0.5);
-    return mixed;
-  });
+      .sort(() => Math.random() - 0.5)
+  );
+
+  const audioCtxRef = useRef(null);
+  if (!audioCtxRef.current) audioCtxRef.current = new (window.AudioContext || window.webkitAudioContext)();
+
+  const playBeep = (freq = 440, duration = 150) => {
+    const oscillator = audioCtxRef.current.createOscillator();
+    const gainNode = audioCtxRef.current.createGain();
+    oscillator.type = "square";
+    oscillator.frequency.value = freq;
+    oscillator.connect(gainNode);
+    gainNode.connect(audioCtxRef.current.destination);
+    gainNode.gain.setValueAtTime(0.1, audioCtxRef.current.currentTime);
+    oscillator.start();
+    oscillator.stop(audioCtxRef.current.currentTime + duration / 1000);
+  };
+
+  const sounds = {
+    select: () => playBeep(600, 100),
+    match: () => playBeep(800, 150),
+    error: () => playBeep(300, 200),
+    win: () => {
+      playBeep(500, 150);
+      setTimeout(() => playBeep(700, 150), 150);
+      setTimeout(() => playBeep(900, 150), 300);
+    },
+  };
 
   useEffect(() => {
     const start = Date.now();
     const timer = setInterval(() => {
       setElapsedTime(Math.floor((Date.now() - start) / 1000));
     }, 1000);
-
-    if (gameCompleted) {
-      clearInterval(timer);
-    }
-
+    if (gameCompleted) clearInterval(timer);
     return () => clearInterval(timer);
   }, [gameCompleted]);
 
   useEffect(() => {
     if (matched.length === data.length * 2 && data.length > 0) {
       setGameCompleted(true);
+      sounds.win();
     }
   }, [matched, data.length]);
 
   const handleCardClick = (card, index) => {
     if (opened.length === 2 || matched.includes(card.content)) return;
 
+    sounds.select();
     const newOpened = [...opened, { ...card, index }];
     setOpened(newOpened);
 
     if (newOpened.length === 2) {
       setMoves((prev) => prev + 1);
       const [first, second] = newOpened;
-
       const isMatch = data.some(
         (pair) =>
           (pair.text === first.content && pair.image === second.content) ||
@@ -54,7 +76,10 @@ export default function GameScreen({ data, onBack }) {
       );
 
       if (isMatch) {
+        sounds.match();
         setMatched((prev) => [...prev, first.content, second.content]);
+      } else {
+        sounds.error();
       }
 
       setTimeout(() => setOpened([]), 800);
@@ -73,14 +98,14 @@ export default function GameScreen({ data, onBack }) {
     setMoves(0);
     setElapsedTime(0);
     setGameCompleted(false);
-
-    const newCards = data
-      .flatMap((item) => [
-        { content: item.text, type: "text" },
-        { content: item.image, type: "image" },
-      ])
-      .sort(() => Math.random() - 0.5);
-    setCards(newCards);
+    setCards(
+      data
+        .flatMap((item) => [
+          { content: item.text, type: "text" },
+          { content: item.image, type: "image" },
+        ])
+        .sort(() => Math.random() - 0.5)
+    );
   };
 
   return (
@@ -96,8 +121,7 @@ export default function GameScreen({ data, onBack }) {
       <div className={style.grid}>
         {cards.map((card, index) => {
           const isFlipped =
-            opened.some((c) => c.index === index) ||
-            matched.includes(card.content);
+            opened.some((c) => c.index === index) || matched.includes(card.content);
 
           return (
             <Card
