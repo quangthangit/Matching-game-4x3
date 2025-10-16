@@ -1,15 +1,22 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
+import useSound from "use-sound";
 import style from "./style.module.css";
 import Card from "../Card/Card";
 
 export default function GameScreen({ data, onBack }) {
-  const TIME_LIMIT = 60; // 1 minute limit
-  const [opened, setOpened] = useState([]);
+  const TIME_LIMIT = 60;
+
+  // ---------- STATE ----------
+  const [selected, setSelected] = useState([]);
   const [matched, setMatched] = useState([]);
+  const [flash, setFlash] = useState({ correct: [], wrong: [] });
+  const [plusOne, setPlusOne] = useState(false);
   const [moves, setMoves] = useState(0);
-  const [elapsedTime, setElapsedTime] = useState(TIME_LIMIT);
-  const [gameCompleted, setGameCompleted] = useState(false);
+  const [time, setTime] = useState(TIME_LIMIT);
+  const [finished, setFinished] = useState(false);
   const [timeUp, setTimeUp] = useState(false);
+
+  // ---------- CARDS ----------
   const [cards, setCards] = useState(() =>
     data
       .flatMap((item) => [
@@ -19,149 +26,148 @@ export default function GameScreen({ data, onBack }) {
       .sort(() => Math.random() - 0.5)
   );
 
-  const audioCtxRef = useRef(null);
-  if (!audioCtxRef.current) audioCtxRef.current = new (window.AudioContext || window.webkitAudioContext)();
-
-  const playBeep = (freq = 440, duration = 150) => {
-    const oscillator = audioCtxRef.current.createOscillator();
-    const gainNode = audioCtxRef.current.createGain();
-    oscillator.type = "square";
-    oscillator.frequency.value = freq;
-    oscillator.connect(gainNode);
-    gainNode.connect(audioCtxRef.current.destination);
-    gainNode.gain.setValueAtTime(0.1, audioCtxRef.current.currentTime);
-    oscillator.start();
-    oscillator.stop(audioCtxRef.current.currentTime + duration / 1000);
+  // ---------- ÂM THANH ----------
+  const loadSound = (name) => {
+    try {
+      return new URL(`../../../assets/sounds/${name}.wav`, import.meta.url).href;
+    } catch {
+      return "";
+    }
   };
 
+  const [playSelect] = useSound(loadSound("select"), { volume: 0.5 });
+  const [playMatch] = useSound(loadSound("match"), { volume: 0.6 });
+  const [playError] = useSound(loadSound("error"), { volume: 0.6 });
+  const [playWin] = useSound(loadSound("win"), { volume: 0.7 });
+
   const sounds = {
-    select: () => playBeep(600, 100),
-    match: () => playBeep(800, 150),
-    error: () => playBeep(300, 200),
+    select: () => playSelect?.(),
+    match: () => playMatch?.(),
+    error: () => playError?.(),
     win: () => {
-      playBeep(500, 150);
-      setTimeout(() => playBeep(700, 150), 150);
-      setTimeout(() => playBeep(900, 150), 300);
+      if (playWin) return playWin();
+      [500, 700, 900].forEach((f, i) => setTimeout(() => beep(f, 150), i * 150));
     },
   };
 
+  // ---------- TIMER ----------
   useEffect(() => {
-    if (gameCompleted || timeUp) return;
-    
+    if (finished) return;
     const timer = setInterval(() => {
-      setElapsedTime((prev) => {
-        if (prev <= 1) {
+      setTime((t) => {
+        if (t <= 1) {
           clearInterval(timer);
+          setFinished(true);
           setTimeUp(true);
-          setGameCompleted(true);
           return 0;
         }
-        return prev - 1;
+        return t - 1;
       });
     }, 1000);
-    
     return () => clearInterval(timer);
-  }, [gameCompleted, timeUp]);
+  }, [finished]);
 
+  // ---------- WIN ----------
   useEffect(() => {
-    if (matched.length === data.length * 2 && data.length > 0) {
-      setGameCompleted(true);
+    if (matched.length === data.length * 2 && data.length) {
+      setFinished(true);
       sounds.win();
     }
   }, [matched, data.length]);
 
-  const handleCardClick = (card, index) => {
-    if (opened.length === 2 || matched.includes(card.content) || timeUp) return;
+  // ---------- CLICK ----------
+  const handleClick = (card, index) => {
+    if (selected.length === 2 || matched.includes(card.content) || timeUp) return;
 
     sounds.select();
-    const newOpened = [...opened, { ...card, index }];
-    setOpened(newOpened);
+    const newSel = [...selected, { ...card, index }];
+    setSelected(newSel);
+    if (newSel.length < 2) return;
 
-    if (newOpened.length === 2) {
-      setMoves((prev) => prev + 1);
-      const [first, second] = newOpened;
-      const isMatch = data.some(
-        (pair) =>
-          (pair.text === first.content && pair.image === second.content) ||
-          (pair.image === first.content && pair.text === second.content)
-      );
+    setMoves((m) => m + 1);
+    const [a, b] = newSel;
+    const isMatch = data.some(
+      (pair) =>
+        (pair.text === a.content && pair.image === b.content) ||
+        (pair.image === a.content && pair.text === b.content)
+    );
 
-      if (isMatch) {
-        sounds.match();
-        setMatched((prev) => [...prev, first.content, second.content]);
-      } else {
-        sounds.error();
-      }
-
-      setTimeout(() => setOpened([]), 800);
+    if (isMatch) {
+      sounds.match();
+      setFlash({ correct: [a.index, b.index], wrong: [] });
+      setPlusOne(true);
+      setTimeout(() => {
+        setMatched((m) => [...m, a.content, b.content]);
+        setSelected([]);
+        setFlash({ correct: [], wrong: [] });
+        setPlusOne(false);
+      }, 350);
+    } else {
+      sounds.error();
+      setFlash({ correct: [], wrong: [a.index, b.index] });
+      setTimeout(() => {
+        setSelected([]);
+        setFlash({ correct: [], wrong: [] });
+      }, 800);
     }
   };
 
-  const formatTime = (seconds) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}:${secs.toString().padStart(2, "0")}`;
-  };
-
-  const handlePlayAgain = () => {
-    setOpened([]);
+  // ---------- UTILS ----------
+  const fmt = (s) => `${Math.floor(s / 60)}:${(s % 60).toString().padStart(2, "0")}`;
+  const reset = () => {
+    setSelected([]);
     setMatched([]);
     setMoves(0);
-    setElapsedTime(TIME_LIMIT);
-    setGameCompleted(false);
+    setTime(TIME_LIMIT);
+    setFinished(false);
     setTimeUp(false);
     setCards(
       data
-        .flatMap((item) => [
-          { content: item.text, type: "text" },
-          { content: item.image, type: "image" },
+        .flatMap((i) => [
+          { content: i.text, type: "text" },
+          { content: i.image, type: "image" },
         ])
         .sort(() => Math.random() - 0.5)
     );
   };
 
+  // ---------- UI ----------
   return (
     <div className={style.container}>
       <h1 className={style.title}>MATCH-A-ROO!</h1>
 
       <div className={style.scoreContainer}>
         <div className={style.scoreBox}>SCORE: {matched.length / 2}</div>
-        <div className={style.scoreBox}>TIME: {formatTime(elapsedTime)}</div>
+        <div className={style.scoreBox}>TIME: {fmt(time)}</div>
         <div className={style.scoreBox}>MOVES: {moves}</div>
       </div>
 
       <div className={style.grid}>
-        {cards.map((card, index) => {
-          const isFlipped =
-            opened.some((c) => c.index === index) || matched.includes(card.content);
-
-          return (
-            <Card
-              key={index}
-              content={card.content}
-              type={card.type}
-              flipped={isFlipped}
-              isMatched={matched.includes(card.content)}
-              onClick={() => handleCardClick(card, index)}
-            />
-          );
-        })}
+        {cards.map((card, i) => (
+          <Card
+            key={i}
+            content={card.content}
+            type={card.type}
+            isSelected={selected.some((s) => s.index === i)}
+            isMatched={matched.includes(card.content)}
+            isCorrectFlash={flash.correct.includes(i)}
+            isWrongFlash={flash.wrong.includes(i)}
+            onClick={() => handleClick(card, i)}
+          />
+        ))}
       </div>
 
-      {gameCompleted && (
+      {plusOne && <div key={moves} className={style.plusOne}>+1</div>}
+
+      {finished && (
         <div className={style.resultBox}>
           <h2>{timeUp ? "⏰ Time's Up!" : "🎉 You finished the game!"}</h2>
-          <p>Total time: {formatTime(timeUp ? 0 : elapsedTime)}</p>
+          <p>Total time: {fmt(TIME_LIMIT -time)}</p>
           <p>Total score: {matched.length / 2}</p>
           <p>Total moves: {moves}</p>
-
           <div className={style.buttonContainer}>
-            <button className={style.playAgainBtn} onClick={handlePlayAgain}>
-              🎮 Play Again
-            </button>
-            <button className={style.backBtn} onClick={onBack}>
-              🏠 Back to Menu
-            </button>
+            <button className={style.playAgainBtn} onClick={reset}>🎮 Play Again</button>
+            <button className={style.backBtn} onClick={onBack}>🏠 Back to Menu</button>
           </div>
         </div>
       )}

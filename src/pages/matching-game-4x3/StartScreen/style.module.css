@@ -1,11 +1,50 @@
+@import url('https://fonts.googleapis.com/css2?family=Fredoka+One&display=swap');
+
+* {
+  font-family: 'Fredoka One', cursive;
+}
+
+
 .container {
   height: 100vh;
   width: 100vw;
   display: flex;
   justify-content: center;
   align-items: center;
-  background: linear-gradient(to bottom, #7fd1ff, #5cd85c);
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
   overflow: hidden;
+  position: relative;
+}
+
+.container::before {
+  content: '⭐';
+  position: absolute;
+  font-size: 3rem;
+  animation: floatStar 5s ease-in-out infinite;
+  opacity: 0.6;
+}
+
+@keyframes floatStar {
+  0%, 100% {
+    top: 10%;
+    left: 20%;
+    transform: rotate(0deg);
+  }
+  25% {
+    top: 80%;
+    left: 30%;
+    transform: rotate(90deg);
+  }
+  50% {
+    top: 20%;
+    left: 70%;
+    transform: rotate(180deg);
+  }
+  75% {
+    top: 70%;
+    left: 80%;
+    transform: rotate(270deg);
+  }
 }
 
 .content {
@@ -14,39 +53,100 @@
   align-items: center;   
   justify-content: center; 
   text-align: center;
+  position: relative;
+  z-index: 1;
 }
 
 .title {
-  font-size: 3rem;
-  color: #ffcc00;
+  font-size: clamp(2.5rem, 8vw, 4rem);
+  color: #fff;
   font-weight: 900;
-  text-shadow: 3px 3px 0 #000;
-  letter-spacing: 2px;
-  margin-bottom: 2rem;
+  text-shadow: 
+    4px 4px 0 #ff6347,
+    6px 6px 0 #ffd500,
+    8px 8px 15px rgba(0, 0, 0, 0.5);
+  letter-spacing: 3px;
+  margin-bottom: 3rem;
   font-family: "Comic Sans MS", "Fredoka One", sans-serif;
+  animation: titleWobble 2s ease-in-out infinite;
+}
+
+@keyframes titleWobble {
+  0%, 100% {
+    transform: rotate(-2deg) scale(1);
+  }
+  25% {
+    transform: rotate(2deg) scale(1.05);
+  }
+  50% {
+    transform: rotate(-2deg) scale(1);
+  }
+  75% {
+    transform: rotate(2deg) scale(1.05);
+  }
 }
 
 .startButton {
-  background-color: #ff6347;
+  background: linear-gradient(135deg, #ff6347, #ff8a65);
   color: white;
-  font-size: 1.5rem;
-  font-weight: 800;
-  border: 4px solid #ffffff; 
-  border-radius: 12px;
-  padding: 15px 35px;
+  font-size: clamp(1.2rem, 4vw, 1.8rem);
+  font-weight: 900;
+  border: 6px solid #fff; 
+  border-radius: 30px;
+  padding: 1.2rem 3rem;
   cursor: pointer;
-  box-shadow: 0 4px 0 #d94a33;
-  transition: all 0.2s ease-in-out;
+  box-shadow: 
+    0 8px 0 #d94a33,
+    0 10px 25px rgba(0, 0, 0, 0.4);
+  transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
   font-family: "Comic Sans MS", "Fredoka One", sans-serif;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+  position: relative;
+  overflow: hidden;
+  animation: buttonPulse 2s ease-in-out infinite;
 }
 
+@keyframes buttonPulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+}
+
+.startButton::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+  transform: rotate(45deg);
+  animation: buttonShine 3s infinite;
+}
+
+@keyframes buttonShine {
+  0% {
+    transform: translateX(-100%) rotate(45deg);
+  }
+  100% {
+    transform: translateX(100%) rotate(45deg);
+  }
+}
 
 .startButton:hover {
-  background-color: #ff7257;
-  transform: translateY(-2px);
+  background: linear-gradient(135deg, #ff8a65, #ffab91);
+  transform: translateY(-10px) scale(1.1);
+  box-shadow: 
+    0 12px 0 #d94a33,
+    0 15px 35px rgba(255, 99, 71, 0.6);
 }
 
 .startButton:active {
-  transform: translateY(2px);
-  box-shadow: 0 2px 0 #b23a25;
+  transform: translateY(2px) scale(1.05);
+  box-shadow: 
+    0 4px 0 #b23a25,
+    0 6px 15px rgba(255, 99, 71, 0.4);
 }

@@ -1,31 +1,22 @@
 import style from "./style.module.css";
 
-export default function Card({ content, flipped, isMatched, onClick, type }) {
+export default function Card({ content, isSelected, isMatched, isCorrectFlash, isWrongFlash, onClick, type }) {
   return (
     <div
-      className={`${style.card} ${flipped ? style.flipped : ""} ${
+      className={`${style.card} ${isSelected ? style.selected : ""} ${
         isMatched ? style.matched : ""
-      }`}
-      onClick={!isMatched && !flipped ? onClick : undefined}
+      } ${isCorrectFlash ? style.correctFlash : ""} ${isWrongFlash ? style.wrongFlash : ""}`}
+      onClick={!isMatched ? onClick : undefined}
     >
-      <div className={style.inner}>
-        <div className={style.front}>
-          <div className={style.questionMark}>?</div>
-        </div>
-
-        <div className={style.back}>
-          {type === "text" ? (
-            <div className={style.content}>{content}</div>
-          ) : (
-            <img
-              src={content}
-              alt="card"
-              className={style.img}
-            />
-          )}
-          {isMatched && <div className={style.matchGlow}></div>}
-        </div>
-      </div>
+      {type === "text" ? (
+        <div className={style.content}>{content}</div>
+      ) : (
+        <img
+          src={content}
+          alt="card"
+          className={style.img}
+        />
+      )}
     </div>
   );
 }
