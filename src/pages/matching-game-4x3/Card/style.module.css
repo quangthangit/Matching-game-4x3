@@ -42,11 +42,12 @@
   justify-content: center;
   align-items: center;
   font-weight: 900;
-  font-size: clamp(16px, 4vw, 30px); 
+  font-size: clamp(12px, 2.5vw, 18px); 
   color: white;
   backface-visibility: hidden;
   padding: 0.5rem;
   box-sizing: border-box;
+  overflow: hidden;
 }
 
 .front {
@@ -63,10 +64,17 @@
 
 .content {
   max-width: 90%;
+  max-height: 90%;
   word-break: break-word;
   overflow-wrap: break-word;
   text-align: center;
-  white-space: pre-line;
+  font-size: clamp(10px, 2vw, 14px);
+  line-height: 1.2;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  line-clamp: 4;
+  -webkit-box-orient: vertical;
 }
 
 .matched {
@@ -97,10 +105,12 @@
   }
 
   .front, .back {
-    font-size: clamp(12px, 5vw, 20px);
+    font-size: clamp(10px, 3vw, 14px);
+    padding: 0.3rem;
   }
 
   .content {
     max-width: 95%;
+    font-size: clamp(8px, 2.5vw, 11px);
   }
 }

@@ -3,11 +3,13 @@ import style from "./style.module.css";
 import Card from "../Card/Card";
 
 export default function GameScreen({ data, onBack }) {
+  const TIME_LIMIT = 60; // 1 minute limit
   const [opened, setOpened] = useState([]);
   const [matched, setMatched] = useState([]);
   const [moves, setMoves] = useState(0);
-  const [elapsedTime, setElapsedTime] = useState(0);
+  const [elapsedTime, setElapsedTime] = useState(TIME_LIMIT);
   const [gameCompleted, setGameCompleted] = useState(false);
+  const [timeUp, setTimeUp] = useState(false);
   const [cards, setCards] = useState(() =>
     data
       .flatMap((item) => [
@@ -44,13 +46,22 @@ export default function GameScreen({ data, onBack }) {
   };
 
   useEffect(() => {
-    const start = Date.now();
+    if (gameCompleted || timeUp) return;
+    
     const timer = setInterval(() => {
-      setElapsedTime(Math.floor((Date.now() - start) / 1000));
+      setElapsedTime((prev) => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          setTimeUp(true);
+          setGameCompleted(true);
+          return 0;
+        }
+        return prev - 1;
+      });
     }, 1000);
-    if (gameCompleted) clearInterval(timer);
+    
     return () => clearInterval(timer);
-  }, [gameCompleted]);
+  }, [gameCompleted, timeUp]);
 
   useEffect(() => {
     if (matched.length === data.length * 2 && data.length > 0) {
@@ -60,7 +71,7 @@ export default function GameScreen({ data, onBack }) {
   }, [matched, data.length]);
 
   const handleCardClick = (card, index) => {
-    if (opened.length === 2 || matched.includes(card.content)) return;
+    if (opened.length === 2 || matched.includes(card.content) || timeUp) return;
 
     sounds.select();
     const newOpened = [...opened, { ...card, index }];
@@ -96,8 +107,9 @@ export default function GameScreen({ data, onBack }) {
     setOpened([]);
     setMatched([]);
     setMoves(0);
-    setElapsedTime(0);
+    setElapsedTime(TIME_LIMIT);
     setGameCompleted(false);
+    setTimeUp(false);
     setCards(
       data
         .flatMap((item) => [
@@ -138,8 +150,8 @@ export default function GameScreen({ data, onBack }) {
 
       {gameCompleted && (
         <div className={style.resultBox}>
-          <h2>🎉 You finished the game!</h2>
-          <p>Total time: {formatTime(elapsedTime)}</p>
+          <h2>{timeUp ? "⏰ Time's Up!" : "🎉 You finished the game!"}</h2>
+          <p>Total time: {formatTime(timeUp ? 0 : elapsedTime)}</p>
           <p>Total score: {matched.length / 2}</p>
           <p>Total moves: {moves}</p>
 
