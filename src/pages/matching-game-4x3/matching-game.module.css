@@ -1540,6 +1540,12 @@
     font-size: 1rem;
     padding: 0.7rem 1.2rem;
   }
+
+  /* smaller text inside cards on small screens */
+  .card .content {
+    font-size: clamp(0.9rem, 4vw, 1.1rem);
+    line-height: 1.1;
+  }
 }
 
 /* extra small phones */
@@ -1548,6 +1554,11 @@
     grid-template-columns: repeat(4, 1fr);
     gap: 10px;
     width: 94vw;
+  }
+
+  .card .content {
+    font-size: clamp(0.8rem, 4.2vw, 1rem);
+    line-height: 1.1;
   }
 }
 
@@ -1620,6 +1631,12 @@
     height: 70%;
   }
 
+  /* slightly smaller text inside cards on 15.6" laptops */
+  .card .content {
+    font-size: clamp(1rem, 2.2vw, 1.25rem);
+    line-height: 1.1;
+  }
+
   .buttonContainer {
     margin-top: 1rem;
   }
@@ -1632,6 +1649,11 @@
   .backBtn,
   .startButton {
     padding: 14px 28px;
+  }
+
+  .card .content {
+    font-size: clamp(0.95rem, 2.6vw, 1.2rem);
+    line-height: 1.1;
   }
 }
 
@@ -1649,7 +1671,7 @@
   }
 
   .gameTitle {
-    font-size: clamp(1.8rem, 4.5vw, 2.4rem);
+    font-size: clamp(1.2rem, 4.0vw, 2.0rem);
     margin: 0.25rem 0 0.5rem;
   }
 
@@ -1678,5 +1700,11 @@
   .card img {
     width: 64%;
     height: 64%;
+  }
+
+  /* smaller text inside cards for 1024x600 */
+  .card .content {
+    font-size: clamp(0.95rem, 2.6vw, 1.2rem);
+    line-height: 1.1;
   }
 }
