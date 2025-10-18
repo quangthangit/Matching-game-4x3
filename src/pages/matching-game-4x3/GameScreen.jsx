@@ -14,6 +14,7 @@ export default function GameScreen({ data, onBack }) {
     finished,
     timeUp,
     cards,
+    score,
     handleClick,
     reset,
     fmt,
@@ -22,10 +23,9 @@ export default function GameScreen({ data, onBack }) {
   return (
     <div className={styles.gameScreen}>
       <h1 className={styles.startTitle}>MATCH-A-ROO!</h1>
-
       <div className={styles.scoreContainer}>
         <div className={styles.scoreBox}>
-          Score: <span className={styles.scoreValue}>{matched.length / 2}</span>
+          Score: <span className={styles.scoreValue}>{score}</span>
         </div>
         <div className={styles.scoreBox}>
           Time: <span className={styles.scoreValue}>{fmt(time)}</span>
@@ -34,8 +34,11 @@ export default function GameScreen({ data, onBack }) {
           Moves: <span className={styles.scoreValue}>{moves}</span>
         </div>
       </div>
-
-      <div className={`${styles.grid} ${data.length === 16 ? styles.gridLarge : ''}`}>
+      <div
+        className={`${styles.grid} ${
+          data.length === 16 ? styles.gridLarge : ""
+        }`}
+      >
         {cards.map((card, i) => (
           <Card
             key={i}
@@ -49,18 +52,37 @@ export default function GameScreen({ data, onBack }) {
           />
         ))}
       </div>
-
-      {plusOne && <div key={moves} className={styles.plusOne}>+1</div>}
-
+      {plusOne && (
+        <div key={moves} className={styles.plusOne}>
+          +1
+        </div>
+      )}
       {finished && (
-        <div className={styles.resultBox}>
-          <h2>{timeUp ? "⏰ Time's Up!" : "🎉 You finished the game!"}</h2>
-          <p>Total time: {fmt(TIME_LIMIT - time)}</p>
-          <p>Total score: {matched.length / 2}</p>
-          <p>Total moves: {moves}</p>
-          <div className={styles.buttonContainer}>
-            <button className={`${styles.btn} ${styles.btnPlay}`} onClick={reset}>🎮 Play Again</button>
-            <button className={`${styles.btn} ${styles.btnBack}`} onClick={onBack}>🏠 Back to Menu</button>
+        <div className={`${styles.resultBox} ${!timeUp ? styles.victory : styles.defeat}`}>
+          <h2 className={styles.title}>
+            {!timeUp ? "🎉 You Win!" : "⏰ Time's Up!"}
+          </h2>
+          <div className={styles.subtitle}>
+            {!timeUp
+              ? "You matched all pairs. Awesome! 🏆"
+              : "You ran out of time. Try again! 💪✨"}
+          </div>
+          <div className={styles.finalScore}>
+            Score: <span className={styles.scoreValue2}>{score}</span>
+          </div>
+          <div className={styles.statsContainer}>
+            <div className={styles.statBox}>
+              Moves<br />
+              <span className={styles.statValue}>{moves}</span>
+            </div>
+            <div className={styles.statBox}>
+              Time used<br />
+              <span className={styles.statValue}>{fmt(TIME_LIMIT - time)}s</span>
+            </div>
+          </div>
+          <div className={styles.playAgainWrapper}>
+            <button className={styles.playAgainBtn} onClick={reset}>Play Again</button>
+            <button className={styles.backBtn} onClick={onBack}>Back to Home</button>
           </div>
         </div>
       )}

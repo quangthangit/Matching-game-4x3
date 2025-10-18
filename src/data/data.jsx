@@ -28,4 +28,14 @@ export const sampleData = [
     image:
       "https://upload.wikimedia.org/wikipedia/commons/c/cb/Pineapple_and_cross_section.jpg",
   },
+  {
+    text: "Lemon",
+    image:
+      "https://cdn.britannica.com/84/188484-050-F27B0049/lemons-tree.jpg",
+  },
+  {
+    text: "Water Melon",
+    image:
+      "https://thvnext.bing.com/th/id/OIP.1GQiZGpoPVXadfZCucNi2AHaFE?cb=12&rs=1&pid=ImgDetMain&o=7&rm=3",
+  },
 ];
